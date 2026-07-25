@@ -1,0 +1,4 @@
+---
+const {city='Vaucluse', yieldPerKwc=1300}=Astro.props;
+---
+<div class="sun-map"><div class="sun-map-visual"><div class="sun-map-sun">☀</div><div class="sun-map-lines"></div><span class="map-label label-avignon">Avignon</span><span class="map-label label-ventoux">Ventoux</span><span class="map-label label-luberon">Luberon</span><span class="map-pin">{city}</span></div><div class="sun-map-copy"><p class="eyebrow">Carte d’ensoleillement</p><h3>Un potentiel à mesurer, pas à deviner.</h3><p>À {city}, un premier scénario utilise un productible indicatif de <strong>{yieldPerKwc} kWh/kWc/an</strong>. L’exposition, les masques et la pente de votre toit déterminent ensuite le résultat réel.</p><div class="map-legend"><span><i></i> exposition favorable</span><span><i></i> analyse des ombres</span></div></div></div>

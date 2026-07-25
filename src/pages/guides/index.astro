@@ -1,0 +1,5 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { guides } from '../../data/editorial.js';
+---
+<BaseLayout title="Guides panneaux solaires Vaucluse — Prix, aides et autonomie" description="Guides pratiques sur le solaire en Vaucluse : prix, mas provençal, autoconsommation, batterie, aides et installateur RGE."><section class="page-hero"><div class="container"><nav class="crumb"><a href="/">Accueil</a><span>›</span><span>Guides</span></nav><p class="eyebrow">Bibliothèque solaire Vaucluse</p><h1>Comprendre avant de comparer les devis.</h1><p class="lead">Huit guides concrets sur la production, la toiture, le confort d’été, les aides et les critères d’un projet durable.</p></div></section><section class="section"><div class="container guide-index-grid">{guides.map((guide)=><a class="guide-card" href={`/guides/${guide.slug}/`}><img src={guide.heroImage} alt="" loading="lazy" width="1600" height="1000"/><div><span>{guide.category} · {guide.readTime}</span><h2>{guide.title}</h2><p>{guide.intro}</p><strong>Lire le guide →</strong></div></a>)}</div></section></BaseLayout>
