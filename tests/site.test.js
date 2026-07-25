@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import test from 'node:test';
+const root = fileURLToPath(new URL('../', import.meta.url));
+const read = (path) => readFileSync(`${root}${path}`, 'utf8');
+test('defines the final Vaucluse canonical site and sitemap integration', () => { const c=read('astro.config.mjs'); assert.match(c,/https:\/\/panneau-solaire-vaucluse\.fr/); assert.match(c,/sitemap\(/); assert.match(c,/@astrojs\/cloudflare/); });
+test('keeps an independent Vaucluse identity and required design fonts', () => { const s=read('src/layouts/BaseLayout.astro')+read('src/styles/global.css'); assert.match(s,/Panneau Solaire Vaucluse/); assert.match(s,/Syne/); assert.match(s,/Nunito Sans/); assert.match(s,/#6D28D9/); assert.match(s,/#CA8A04/); assert.doesNotMatch(s,/Loire-Atlantique|Alpes-Maritimes/); });
+test('provides at least 70 Vaucluse communes with unique local copy inputs', () => { const c=JSON.parse(read('src/data/communes.json')); assert.ok(c.length>=70); assert.ok(c.every(x=>x.departmentCode==='84' && /^84\d{3}$/.test(x.postalCode))); assert.equal(new Set(c.map(x=>x.slug)).size,c.length); assert.ok(c.every(x=>x.localAngle&&x.heritageNote&&x.marketNote)); });
+test('generates both solar and installer locality routes', () => { const s=read('src/pages/panneau-solaire-[commune].astro')+read('src/components/LocalPage.astro'), i=read('src/pages/installateur-solaire-[commune].astro')+read('src/components/LocalPage.astro'); assert.match(s,/getStaticPaths/);assert.match(i,/getStaticPaths/);assert.match(s,/Calculer mon potentiel solaire/);assert.match(i,/QualiPV RGE/); });
+test('uses a server-only Vaucluse lead endpoint with postcode, consent, honeypot and idempotence guards', () => { const l=read('functions/api/lead.js'); for(const marker of ["SITE_DOMAIN = 'panneau-solaire-vaucluse.fr'","DEPT_CODE = '84'",'SUPABASE_SERVICE_ROLE_KEY','VUD_API_KEY','honeypot','idempotency','ping.php','get.php',"cat_id:'37'"]) assert.match(l,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))); assert.match(l,/\^84\\d\{3\}\$/); assert.doesNotMatch(l,/17695301406978e31c715766978e31c715ae/); });
+test('ships the production technical SEO assets',()=>{for(const f of ['src/pages/index.astro','src/pages/communes.astro','src/pages/tarifs.astro','src/pages/robots.txt.ts','src/pages/devis.astro','src/pages/mentions-legales.astro','src/pages/politique-confidentialite.astro'])assert.ok(existsSync(`${root}${f}`),`missing ${f}`)});

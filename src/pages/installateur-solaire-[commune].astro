@@ -1,0 +1,6 @@
+---
+import LocalPage from '../components/LocalPage.astro'; import communes from '../data/communes.json';
+export function getStaticPaths(){return communes.map((city)=>({params:{commune:city.slug},props:{city}}));}
+const {city}=Astro.props;
+---
+<LocalPage city={city} kind="installer" />

@@ -1,0 +1,4 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'; import communes from '../data/communes.json';
+---
+<BaseLayout title="Panneaux solaires dans les communes du Vaucluse"><section class="page-hero"><p class="eyebrow">Vaucluse · 84</p><h1>Trouver votre étude solaire, commune par commune.</h1><p>Des repères locaux pour les toitures de Provence, du Grand Avignon au Luberon et au Ventoux.</p></section><section class="directory">{communes.map(c=><article><p>{c.postalCode}</p><h2>{c.name}</h2><p>{c.localAngle}</p><a href={`/panneau-solaire-${c.slug}/`}>Panneaux solaires →</a><a href={`/installateur-solaire-${c.slug}/`}>Installateur RGE →</a></article>)}</section></BaseLayout>

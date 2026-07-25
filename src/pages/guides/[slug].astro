@@ -1,0 +1,5 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'; import {guides} from '../../data/guides.js';
+export function getStaticPaths(){return guides.map(guide=>({params:{slug:guide.slug},props:{guide}}));} const {guide}=Astro.props;
+---
+<BaseLayout title={`${guide.title} — Panneau Solaire Vaucluse`} description={guide.excerpt}><article class="article"><p class="eyebrow">Guide Vaucluse 2026</p><h1>{guide.title}</h1><p>{guide.excerpt}</p><h2>Des décisions adaptées à votre maison</h2><p>Le bon projet associe consommation, toiture, saisonnalité et qualité de pose. Dans le Vaucluse, la production estivale est forte : l’autoconsommation se prépare avec vos usages réels, notamment le rafraîchissement.</p><h2>Les informations à demander</h2><p>Production estimée, hypothèses d’ombrage, matériel, garanties, démarches, raccordement et conditions de maintenance doivent être clairement expliqués dans un devis.</p><a class="button" href="/devis/">Demander mon étude solaire</a></article></BaseLayout>
