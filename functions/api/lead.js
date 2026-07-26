@@ -40,7 +40,13 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
   const prior = await existing.json();
   if (prior?.length) return json({ success: true, duplicate: true, status: prior[0].vud_status || 'captured', devisId: prior[0].vud_devis_id || null }, 200, origin);
 
-  const description = `Projet panneaux solaires à ${raw.city} (${postalCode}) dans le Vaucluse. Projet : ${raw.project || 'à étudier'}.`;
+  const detail = (value, fallback = 'non précisé') => String(value || fallback).replace(/[\r\n]+/g, ' ').trim().slice(0, 180);
+  const description = [
+    `Projet panneaux solaires à ${raw.city} (${postalCode}) dans le Vaucluse.`,
+    `Demande : ${detail(raw.project)}. Statut : ${detail(raw.ownership)}. Calendrier : ${detail(raw.projectTiming)}.`,
+    `Toiture : ${detail(raw.roofType)}, surface ${detail(raw.surfaceToiture)}, orientation ${detail(raw.orientation)}, ombres ${detail(raw.shading)}.`,
+    `Énergie : ${detail(raw.annualConsumption)}, facture ${detail(raw.electricityBill)}, usages ${detail(raw.uses)}, priorité ${detail(raw.priority)}.`
+  ].join(' ');
   const lead = { source_site: SITE_DOMAIN, niche: SITE_NICHE, departement: DEPT_CODE, cat_id: 37, cat_name: 'Panneaux photovoltaïques', nom: String(raw.lastName).trim(), prenom: String(raw.firstName).trim(), email: String(raw.email).trim().toLowerCase(), telephone: phone, adresse: String(raw.address).trim(), ville: String(raw.city).trim(), code_postal: postalCode, description, submission_id: submissionId, page_url: String(raw.pageUrl || `https://${SITE_DOMAIN}`).slice(0, 500), consent_at: new Date().toISOString(), vud_status: 'pending' };
   const saved = await timedFetch(`${base}/rest/v1/rank_rent_leads`, { method: 'POST', headers: { ...sbHeaders(env), prefer: 'return=representation' }, body: JSON.stringify(lead) }, fetcher);
   if (!saved.ok) return json({ success: false, message: 'Enregistrement impossible.' }, 502, origin);

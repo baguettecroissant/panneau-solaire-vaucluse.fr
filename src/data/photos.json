@@ -1,0 +1,83 @@
+[
+  {
+    "slug": "provence-lavande",
+    "src": "/images/photos/provence-lavande.webp",
+    "srcset": "/images/photos/provence-lavande-768.webp 768w, /images/photos/provence-lavande.webp 1440w",
+    "author": "Andyblind",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/?curid=12564165",
+    "alt": "Champ de lavande en Provence"
+  },
+  {
+    "slug": "mont-ventoux",
+    "src": "/images/photos/mont-ventoux.webp",
+    "srcset": "/images/photos/mont-ventoux-768.webp 768w, /images/photos/mont-ventoux.webp 1440w",
+    "author": "Erwin Bosman",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/?curid=71409129",
+    "alt": "Le mont Ventoux vu depuis la plaine provençale"
+  },
+  {
+    "slug": "avignon-pont",
+    "src": "/images/photos/avignon-pont.webp",
+    "srcset": "/images/photos/avignon-pont-768.webp 768w, /images/photos/avignon-pont.webp 1440w",
+    "author": "Giles Laurent",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/?curid=175923414",
+    "alt": "Le pont Saint-Bénézet et Avignon"
+  },
+  {
+    "slug": "baux-provence",
+    "src": "/images/photos/baux-provence.webp",
+    "srcset": "/images/photos/baux-provence-768.webp 768w, /images/photos/baux-provence.webp 1440w",
+    "author": "Christian Ferrer",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/?curid=53099977",
+    "alt": "Maison en pierre aux Baux-de-Provence"
+  },
+  {
+    "slug": "toiture-solaire",
+    "src": "/images/photos/toiture-solaire.webp",
+    "srcset": "/images/photos/toiture-solaire-768.webp 768w, /images/photos/toiture-solaire.webp 1440w",
+    "author": "Asurnipal",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/?curid=105054066",
+    "alt": "Panneaux photovoltaïques intégrés à une toiture résidentielle"
+  },
+  {
+    "slug": "installation-solaire",
+    "src": "/images/photos/installation-solaire.webp",
+    "srcset": "/images/photos/installation-solaire-768.webp 768w, /images/photos/installation-solaire.webp 1440w",
+    "author": "Jeroen Komen",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/?curid=29421079",
+    "alt": "Pose de panneaux solaires sur une toiture"
+  },
+  {
+    "slug": "modules-photovoltaiques",
+    "src": "/images/photos/modules-photovoltaiques.webp",
+    "srcset": "/images/photos/modules-photovoltaiques-768.webp 768w, /images/photos/modules-photovoltaiques.webp 1440w",
+    "author": "Smtzzz",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/?curid=127893895",
+    "alt": "Détail de modules photovoltaïques"
+  },
+  {
+    "slug": "maison-solaire-aerienne",
+    "src": "/images/photos/maison-solaire-aerienne.webp",
+    "srcset": "/images/photos/maison-solaire-aerienne-768.webp 768w, /images/photos/maison-solaire-aerienne.webp 1440w",
+    "alt": "Vue aérienne d’une maison équipée de plusieurs champs photovoltaïques",
+    "author": "ecosolarceo",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Architecture-3379146_960_720.jpg"
+  },
+  {
+    "slug": "poseurs-photovoltaiques",
+    "src": "/images/photos/poseurs-photovoltaiques.webp",
+    "srcset": "/images/photos/poseurs-photovoltaiques-768.webp 768w, /images/photos/poseurs-photovoltaiques.webp 1440w",
+    "alt": "Deux techniciens installent des modules photovoltaïques sur une toiture",
+    "author": "National Institute of Standards and Technology",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:NZERTF_Roof_(8621832515).jpg"
+  }
+]

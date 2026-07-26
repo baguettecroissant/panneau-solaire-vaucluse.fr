@@ -37,7 +37,7 @@ test('legal and privacy pages contain a complete information framework instead o
 
 test('home page ships real visual image assets, a calculator and topic clusters', () => {
   const home = source('src/pages/index.astro');
-  for (const marker of ['/images/', 'SolarCalculator', 'guides/', 'communes/', 'tarifs/', 'aides-panneau-solaire-84']) assert.match(home, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  for (const marker of ['Photo', 'SolarCalculator', 'guides/', 'communes/', 'tarifs/', 'aides-panneau-solaire-84']) assert.match(home, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });
 
 test('lead form guides a homeowner through project, property and contact steps', () => {

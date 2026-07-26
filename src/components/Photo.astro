@@ -1,0 +1,10 @@
+---
+import photos from '../data/photos.json';
+const {slug, class:className='', loading='lazy', priority=false, caption=false, sizes='(max-width: 760px) 100vw, 50vw'}=Astro.props;
+const photo=photos.find((item)=>item.slug===slug);
+if(!photo) throw new Error(`Unknown photo: ${slug}`);
+---
+<picture class:list={['real-photo',className]}>
+  <img src={photo.src} srcset={photo.srcset} sizes={sizes} width="1440" height="900" loading={priority?'eager':loading} fetchpriority={priority?'high':'auto'} decoding="async" alt={photo.alt}/>
+  {caption && <small class="photo-credit">{photo.alt} · <a href={photo.source} rel="external noopener" target="_blank">{photo.author}, {photo.license}</a></small>}
+</picture>

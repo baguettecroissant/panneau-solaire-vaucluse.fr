@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Photo from '../components/Photo.astro';
+import photos from '../data/photos.json';
+---
+<BaseLayout title="Crédits photographiques — Panneau Solaire Vaucluse" description="Origine, auteurs et licences des photographies utilisées sur Panneau Solaire Vaucluse.">
+  <section class="content-hero compact-hero"><div class="container"><p class="eyebrow">Transparence</p><h1>Crédits photographiques</h1><p class="lead">Toutes les photographies sont hébergées localement, optimisées en WebP et utilisées selon leur licence Wikimedia Commons.</p></div></section>
+  <section class="section"><div class="container photo-credit-grid">{photos.map((photo)=><article><Photo slug={photo.slug}/><div><h2>{photo.alt}</h2><p>Photographe : <strong>{photo.author}</strong></p><p>Licence : {photo.license}</p><a class="text-link" href={photo.source} rel="external noopener" target="_blank">Voir la source originale →</a></div></article>)}</div></section>
+</BaseLayout>
