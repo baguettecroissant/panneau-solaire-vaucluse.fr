@@ -52,4 +52,6 @@ test('mobile pages provide a scroll-triggered sticky quote CTA',()=>{
   assert.match(layout,/scrollY\s*>\s*320/);
   assert.match(css,/\.mobile-sticky-cta/);
   assert.match(css,/@media \(max-width: 760px\)/);
+  assert.doesNotMatch(css,/\.mobile-sticky-cta>a\{[^}]*var\(--secondary\)/);
+  assert.match(css,/\.mobile-sticky-cta>a\{[^}]*background-color:#f3ba27/);
 });
