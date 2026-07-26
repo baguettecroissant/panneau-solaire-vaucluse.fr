@@ -6,7 +6,7 @@ const VUD_PING_URL = 'https://www.viteundevis.com/api/ping.php';
 const VUD_LEAD_URL = 'https://www.viteundevis.com/api/get.php';
 const MAX_BODY_BYTES = 16_384;
 
-const allowed = (origin, env) => origin === `https://${SITE_DOMAIN}` || origin === `https://www.${SITE_DOMAIN}` || origin === 'https://panneau-solaire-vaucluse-fr.pages.dev' || (env.ALLOW_LOCAL_ORIGIN === 'true' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
+const allowed = (origin, env) => origin === `https://${SITE_DOMAIN}` || origin === `https://www.${SITE_DOMAIN}` || /^https:\/\/(?:[a-z0-9-]+\.)?panneau-solaire-vaucluse-fr\.pages\.dev$/.test(origin) || (env.ALLOW_LOCAL_ORIGIN === 'true' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
 const json = (body, status = 200, origin = '') => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': origin || `https://${SITE_DOMAIN}`, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', vary: 'Origin' } });
 const normalizePhone = (value = '') => { let digits = String(value).replace(/\D/g, ''); if (digits.startsWith('0033')) digits = `0${digits.slice(4)}`; if (digits.startsWith('33') && digits.length === 11) digits = `0${digits.slice(2)}`; return /^0[1-9]\d{8}$/.test(digits) ? digits : null; };
 const sbHeaders = (env) => ({ 'content-type': 'application/json', apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` });
