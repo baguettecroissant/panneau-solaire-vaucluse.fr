@@ -29,6 +29,10 @@ const defaultSchema={'@context':'https://schema.org','@type':'WebSite',name:site
     <details class="mobile-menu"><summary aria-label="Ouvrir le menu">Menu</summary><nav>{nav.map(([label,href])=><a href={href}>{label}</a>)}<a href="/devis/">Demander une étude</a></nav></details>
   </header>
   <main id="contenu"><slot /></main>
+  <aside class="mobile-sticky-cta" data-mobile-sticky-cta aria-hidden="true">
+    <span><small>Étude gratuite</small><strong>Mon devis solaire</strong></span>
+    <a href={Astro.url.pathname==='/devis/'?'#formulaire':'/devis/#formulaire'}>Démarrer <span aria-hidden="true">→</span></a>
+  </aside>
   <footer class="site-footer">
     <div class="footer-inner">
       <section><a class="brand footer-brand" href="/"><span>🌅</span><b>Panneau Solaire<br/><em>Vaucluse</em></b></a><p>Des repères clairs pour étudier un projet photovoltaïque dans le Vaucluse, sans promesse irréaliste.</p></section>
@@ -37,5 +41,20 @@ const defaultSchema={'@context':'https://schema.org','@type':'WebSite',name:site
       <section><h2>Informations</h2><a href="/mentions-legales/">Mentions légales</a><a href="/politique-confidentialite/">Confidentialité</a><a href="/credits-photos/">Crédits photos</a></section>
     </div>
   </footer>
+  <script>
+    const stickyCta=document.querySelector('[data-mobile-sticky-cta]');
+    if(stickyCta){
+      const updateStickyCta=()=>{
+        const footer=document.querySelector('.site-footer');
+        const footerNear=footer&&footer.getBoundingClientRect().top<window.innerHeight+80;
+        const visible=window.scrollY > 320&&!footerNear;
+        stickyCta.classList.toggle('is-visible',visible);
+        stickyCta.setAttribute('aria-hidden',String(!visible));
+      };
+      addEventListener('scroll',updateStickyCta,{passive:true});
+      addEventListener('resize',updateStickyCta,{passive:true});
+      updateStickyCta();
+    }
+  </script>
 </body>
 </html>

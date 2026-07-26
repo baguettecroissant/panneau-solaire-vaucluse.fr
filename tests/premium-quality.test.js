@@ -37,3 +37,19 @@ test('quote form captures project, property, energy use and contact details',()=
   for(const name of ['project','projectTiming','postalCode','city','roofType','surfaceToiture','orientation','annualConsumption','electricityBill','ownership','firstName','lastName','phone','email','address','consent']) assert.match(form,new RegExp(`name=["']${name}["']`),`missing ${name}`);
   assert.match(form,/Étape 4/);assert.match(form,/aria-current/);assert.match(form,/data-summary/);
 });
+
+test('lead wizard initialization never scrolls visitors to the form',()=>{
+  const form=read('src/components/LeadForm.astro');
+  assert.match(form,/setStep=\(target,shouldScroll=true\)/);
+  assert.match(form,/setStep\(1,false\)/);
+});
+
+test('mobile pages provide a scroll-triggered sticky quote CTA',()=>{
+  const layout=read('src/layouts/BaseLayout.astro');
+  const css=read('src/styles/global.css');
+  assert.match(layout,/class="mobile-sticky-cta"/);
+  assert.match(layout,/data-mobile-sticky-cta/);
+  assert.match(layout,/scrollY\s*>\s*320/);
+  assert.match(css,/\.mobile-sticky-cta/);
+  assert.match(css,/@media \(max-width: 760px\)/);
+});
