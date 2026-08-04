@@ -5,6 +5,7 @@ const CP_PATTERN = /^84\d{3}$/;
 const VUD_PING_URL = 'https://www.viteundevis.com/api/ping.php';
 const VUD_LEAD_URL = 'https://www.viteundevis.com/api/get.php';
 const MAX_BODY_BYTES = 16_384;
+const CONSENT_TEXT = 'J’accepte d’être contacté(e) par téléphone par ViteUnDevis.com et ses partenaires afin de qualifier ma demande de devis.';
 
 const allowed = (origin, env) => origin === `https://${SITE_DOMAIN}` || origin === `https://www.${SITE_DOMAIN}` || /^https:\/\/(?:[a-z0-9-]+\.)?panneau-solaire-vaucluse-fr\.pages\.dev$/.test(origin) || (env.ALLOW_LOCAL_ORIGIN === 'true' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
 const json = (body, status = 200, origin = '') => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': origin || `https://${SITE_DOMAIN}`, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', vary: 'Origin' } });
@@ -23,6 +24,10 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
   try { const text = await request.text(); if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) return json({ success: false, message: 'Requête trop volumineuse.' }, 413, origin); raw = JSON.parse(text); } catch { return json({ success: false, message: 'JSON invalide.' }, 400, origin); }
   // honeypot: the hidden website input must remain blank.
   if (raw.website) return json({ success: true }, 200, origin);
+  const consentIp = request.headers.get('cf-connecting-ip') || '';
+  const consentTimestamp = String(raw.consent_timestamp || '').trim().slice(0, 40);
+  const consentUrl = String(raw.pageUrl || '').trim().slice(0, 500);
+  if (!consentIp || !consentTimestamp || !consentUrl) return json({ success: false, errors: ['Preuve de consentement incomplète.'] }, 400, origin);
   const phone = normalizePhone(raw.phone);
   const postalCode = String(raw.postalCode || '');
   const errors = [];
@@ -47,7 +52,7 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
     `Toiture : ${detail(raw.roofType)}, surface ${detail(raw.surfaceToiture)}, orientation ${detail(raw.orientation)}, ombres ${detail(raw.shading)}.`,
     `Énergie : ${detail(raw.annualConsumption)}, facture ${detail(raw.electricityBill)}, usages ${detail(raw.uses)}, priorité ${detail(raw.priority)}.`
   ].join(' ');
-  const lead = { source_site: SITE_DOMAIN, niche: SITE_NICHE, departement: DEPT_CODE, cat_id: 37, cat_name: 'Panneaux photovoltaïques', nom: String(raw.lastName).trim(), prenom: String(raw.firstName).trim(), email: String(raw.email).trim().toLowerCase(), telephone: phone, adresse: String(raw.address).trim(), ville: String(raw.city).trim(), code_postal: postalCode, description, submission_id: submissionId, page_url: String(raw.pageUrl || `https://${SITE_DOMAIN}`).slice(0, 500), consent_at: new Date().toISOString(), vud_status: 'pending' };
+  const lead = { source_site: SITE_DOMAIN, niche: SITE_NICHE, departement: DEPT_CODE, cat_id: 37, cat_name: 'Panneaux photovoltaïques', nom: String(raw.lastName).trim(), prenom: String(raw.firstName).trim(), email: String(raw.email).trim().toLowerCase(), telephone: phone, adresse: String(raw.address).trim(), ville: String(raw.city).trim(), code_postal: postalCode, description, submission_id: submissionId, page_url: consentUrl, consent_at: consentTimestamp, vud_response: { consent: { date: consentTimestamp, ip: consentIp, text: CONSENT_TEXT, url: consentUrl } }, vud_status: 'pending' };
   const saved = await timedFetch(`${base}/rest/v1/rank_rent_leads`, { method: 'POST', headers: { ...sbHeaders(env), prefer: 'return=representation' }, body: JSON.stringify(lead) }, fetcher);
   if (!saved.ok) return json({ success: false, message: 'Enregistrement impossible.' }, 502, origin);
   const record = (await saved.json())?.[0];
@@ -62,9 +67,9 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
 
   try {
     const mobile = phone.startsWith('06') || phone.startsWith('07');
-    const response = await timedFetch(VUD_LEAD_URL, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ key: env.VUD_API_KEY, cat_id:'37', nom: lead.nom, prenom: lead.prenom, email: lead.email, tel: mobile ? '' : phone, mobile: mobile ? phone : '', adresse1: lead.adresse, cp: postalCode, ville: lead.ville, cp_projet: postalCode, ville_projet: lead.ville, pays: 'fr', tp: '1', description, site_name: SITE_DOMAIN, format_return: 'json' }) }, fetcher);
+    const response = await timedFetch(VUD_LEAD_URL, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ key: env.VUD_API_KEY, cat_id:'37', nom: lead.nom, prenom: lead.prenom, email: lead.email, tel: mobile ? '' : phone, mobile: mobile ? phone : '', adresse1: lead.adresse, cp: postalCode, ville: lead.ville, cp_projet: postalCode, ville_projet: lead.ville, pays: 'fr', tp: '1', description, site_name: SITE_DOMAIN, format_return: 'json', consent_date: consentTimestamp, consent_ip: consentIp, consent_texte: CONSENT_TEXT, consent_url: consentUrl }) }, fetcher);
     const result = await response.json(); const devisId = result?.devis_data?.devis_id || null;
-    await patch({ vud_status: devisId ? 'sent' : 'captured', vud_devis_id: devisId ? String(devisId) : null, vud_response: result });
+    await patch({ vud_status: devisId ? 'sent' : 'captured', vud_devis_id: devisId ? String(devisId) : null, vud_response: { consent: lead.vud_response.consent, response: result } });
     return json({ success: true, status: devisId ? 'sent' : 'captured', devisId }, devisId ? 200 : 202, origin);
   } catch { await patch({ vud_status: 'captured' }); return json({ success: true, status: 'captured' }, 202, origin); }
 }
