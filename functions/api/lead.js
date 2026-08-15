@@ -6,6 +6,20 @@ const VUD_PING_URL = 'https://www.viteundevis.com/api/ping.php';
 const VUD_LEAD_URL = 'https://www.viteundevis.com/api/get.php';
 const MAX_BODY_BYTES = 16_384;
 const CONSENT_TEXT = 'J’accepte d’être contacté(e) par téléphone par ViteUnDevis.com et ses partenaires afin de qualifier ma demande de devis.';
+const CONSENT_VERSION = 'vud-phone-v1';
+
+export function canonicalizeLeadPageUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) throw new Error('invalid_page_url');
+  let url;
+  try { url = new URL(value.trim()); } catch { throw new Error('invalid_page_url'); }
+  if (
+    url.protocol !== 'https:' || url.username || url.password || url.port
+    || ![SITE_DOMAIN, `www.${SITE_DOMAIN}`].includes(url.hostname)
+  ) throw new Error('invalid_page_url');
+  url.search = '';
+  url.hash = '';
+  return `${url.origin}${url.pathname}`;
+}
 
 const allowed = (origin, env) => origin === `https://${SITE_DOMAIN}` || origin === `https://www.${SITE_DOMAIN}` || /^https:\/\/(?:[a-z0-9-]+\.)?panneau-solaire-vaucluse-fr\.pages\.dev$/.test(origin) || (env.ALLOW_LOCAL_ORIGIN === 'true' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
 const json = (body, status = 200, origin = '') => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': origin || `https://${SITE_DOMAIN}`, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', vary: 'Origin' } });
@@ -26,8 +40,9 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
   if (raw.website) return json({ success: true }, 200, origin);
   const consentIp = request.headers.get('cf-connecting-ip') || '';
   const consentTimestamp = String(raw.consent_timestamp || '').trim().slice(0, 40);
-  const consentUrl = String(raw.pageUrl || '').trim().slice(0, 500);
-  if (!consentIp || !consentTimestamp || !consentUrl) return json({ success: false, errors: ['Preuve de consentement incomplète.'] }, 400, origin);
+  let consentUrl;
+  try { consentUrl = canonicalizeLeadPageUrl(raw.pageUrl); } catch { return json({ success: false, errors: ['Preuve de consentement invalide.'] }, 400, origin); }
+  if (!consentIp || !consentTimestamp) return json({ success: false, errors: ['Preuve de consentement incomplète.'] }, 400, origin);
   const phone = normalizePhone(raw.phone);
   const postalCode = String(raw.postalCode || '');
   const errors = [];
@@ -40,7 +55,8 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
 
   const base = env.SUPABASE_URL.replace(/\/$/, '');
   const submissionId = String(raw.idempotency);
-  const existing = await timedFetch(`${base}/rest/v1/rank_rent_leads?submission_id=eq.${encodeURIComponent(submissionId)}&select=id,vud_status,vud_devis_id`, { headers: sbHeaders(env) }, fetcher);
+  const existingUrl = `${base}/rest/v1/rank_rent_leads?source_site=eq.${encodeURIComponent(SITE_DOMAIN)}&submission_id=eq.${encodeURIComponent(submissionId)}&select=id,vud_status,vud_devis_id`;
+  const existing = await timedFetch(existingUrl, { headers: sbHeaders(env) }, fetcher);
   if (!existing.ok) return json({ success: false, message: 'Service temporairement indisponible.' }, 503, origin);
   const prior = await existing.json();
   if (prior?.length) return json({ success: true, duplicate: true, status: prior[0].vud_status || 'captured', devisId: prior[0].vud_devis_id || null }, 200, origin);
@@ -52,9 +68,18 @@ export async function handleLead({ request, env = {} }, fetcher = fetch) {
     `Toiture : ${detail(raw.roofType)}, surface ${detail(raw.surfaceToiture)}, orientation ${detail(raw.orientation)}, ombres ${detail(raw.shading)}.`,
     `Énergie : ${detail(raw.annualConsumption)}, facture ${detail(raw.electricityBill)}, usages ${detail(raw.uses)}, priorité ${detail(raw.priority)}.`
   ].join(' ');
-  const lead = { source_site: SITE_DOMAIN, niche: SITE_NICHE, departement: DEPT_CODE, cat_id: 37, cat_name: 'Panneaux photovoltaïques', nom: String(raw.lastName).trim(), prenom: String(raw.firstName).trim(), email: String(raw.email).trim().toLowerCase(), telephone: phone, adresse: String(raw.address).trim(), ville: String(raw.city).trim(), code_postal: postalCode, description, submission_id: submissionId, page_url: consentUrl, consent_at: consentTimestamp, vud_response: { consent: { date: consentTimestamp, ip: consentIp, text: CONSENT_TEXT, url: consentUrl } }, vud_status: 'pending' };
+  const lead = { source_site: SITE_DOMAIN, niche: SITE_NICHE, departement: DEPT_CODE, cat_id: 37, cat_name: 'Panneaux photovoltaïques', nom: String(raw.lastName).trim(), prenom: String(raw.firstName).trim(), email: String(raw.email).trim().toLowerCase(), telephone: phone, adresse: String(raw.address).trim(), ville: String(raw.city).trim(), code_postal: postalCode, description, submission_id: submissionId, page_url: consentUrl, consent_at: consentTimestamp, consent_version: CONSENT_VERSION, vud_response: { consent: { date: consentTimestamp, ip: consentIp, text: CONSENT_TEXT, url: consentUrl } }, vud_status: 'pending' };
   const saved = await timedFetch(`${base}/rest/v1/rank_rent_leads`, { method: 'POST', headers: { ...sbHeaders(env), prefer: 'return=representation' }, body: JSON.stringify(lead) }, fetcher);
-  if (!saved.ok) return json({ success: false, message: 'Enregistrement impossible.' }, 502, origin);
+  if (!saved.ok) {
+    if (saved.status === 409) {
+      const existingAfterConflict = await timedFetch(existingUrl, { headers: sbHeaders(env) }, fetcher);
+      if (existingAfterConflict.ok) {
+        const conflictExisting = await existingAfterConflict.json();
+        if (conflictExisting?.length) return json({ success: true, duplicate: true, idempotent: true, status: conflictExisting[0].vud_status || 'captured', devisId: conflictExisting[0].vud_devis_id || null }, 200, origin);
+      }
+    }
+    return json({ success: false, message: 'Enregistrement impossible.' }, 502, origin);
+  }
   const record = (await saved.json())?.[0];
   const patch = async (data) => { try { await timedFetch(`${base}/rest/v1/rank_rent_leads?id=eq.${encodeURIComponent(record.id)}`, { method: 'PATCH', headers: sbHeaders(env), body: JSON.stringify({ ...data, updated_at: new Date().toISOString() }) }, fetcher); } catch {} };
 
